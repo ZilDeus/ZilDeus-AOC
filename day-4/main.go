@@ -8,7 +8,7 @@ import (
 
 func main() {
 	P1()
-	//P2()
+	P2()
 }
 
 func compare_word(word string) bool {
@@ -89,6 +89,53 @@ func P1() {
 		}
 		fmt.Println()
 
+	}
+	fmt.Println(result)
+}
+func compare_word2(word string) bool {
+	xmas := "MAS"
+	samx := "SAM"
+	return strings.Compare(xmas, word) == 0 || strings.Compare(samx, word) == 0
+}
+
+func P2() {
+	input, _ := os.ReadFile("test.txt")
+	letter_board := strings.Split(string(input), "\n")
+	letter_board_numbers := make([][]int, len(letter_board))
+	for i := range len(letter_board_numbers) {
+		letter_board_numbers[i] = make([]int, len(letter_board[i]))
+	}
+	result := 0
+	for y := 0; y < len(letter_board); y++ {
+		for x := 0; x < len(letter_board[y]); x++ {
+			if letter_board[y][x] != 'M' && letter_board[y][x] != 'S' {
+				continue
+			}
+			is_horizontal_in_bound := len(letter_board[y])-x-1 >= 2
+			is_vertical_in_bound := len(letter_board)-y-1 > 2
+			if is_vertical_in_bound && is_horizontal_in_bound {
+				word1 := string([]byte{letter_board[y][x], letter_board[y+1][x+1], letter_board[y+2][x+2]})
+				word2 := string([]byte{letter_board[y][x+2], letter_board[y+1][x+1], letter_board[y+2][x]})
+				if compare_word2(word1) && compare_word2(word2) {
+					letter_board_numbers[y][x] = 1
+					letter_board_numbers[y][x+2] = 1
+					letter_board_numbers[y+2][x] = 1
+					letter_board_numbers[y+2][x+2] = 1
+					letter_board_numbers[y+1][x+1] = 1
+					result++
+				}
+			}
+		}
+	}
+	for y := 0; y < len(letter_board_numbers); y++ {
+		for x := 0; x < len(letter_board_numbers[y]); x++ {
+			if letter_board_numbers[y][x] == 0 {
+				fmt.Print(".")
+			} else {
+				fmt.Print(string(letter_board[y][x]))
+			}
+		}
+		fmt.Println()
 	}
 	fmt.Println(result)
 }
