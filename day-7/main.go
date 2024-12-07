@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
 func main() {
-	P1()
-	//P2()
+	//P1()
+	P2()
 }
 
 type Equation struct {
@@ -18,18 +19,22 @@ type Equation struct {
 }
 
 const (
-	ADD      = iota
-	MULTIPLY = iota
+	ADD           = iota
+	MULTIPLY      = iota
+	CONCATINATION = iota
 )
-
-var operations = []int{ADD, MULTIPLY}
 
 func operate(a int, b int, op int) int {
 	switch op {
 	case ADD:
 		return a + b
-	default:
+	case MULTIPLY:
 		return a * b
+	default:
+		concated := fmt.Sprintf("%d%d", a, b)
+		var n int
+		fmt.Sscanf(concated, "%d", &n)
+		return n
 	}
 }
 
@@ -79,9 +84,10 @@ func generate_operations_permutaions(size int) [][]int {
 		} else {
 			perm = slices.Clone(perms[len(perms)-1])
 			for j, p := range perm {
-				if p == ADD {
+				switch p {
+				case ADD:
 					perm[j] = MULTIPLY
-				} else {
+				case MULTIPLY:
 					perm[j] = ADD
 				}
 				if slices.IndexFunc(perms, func(e []int) bool {
@@ -96,13 +102,23 @@ func generate_operations_permutaions(size int) [][]int {
 	}
 }
 
-func is_equation_valid(equation Equation) bool {
-	stacks := generate_operations_permutaions(len(equation.numbers))
+func is_equation_valid(equation Equation, stacks [][]int) bool {
+	if slices.IndexFunc(equation.numbers, func(n int) bool {
+		if n > equation.answer {
+			return true
+		}
+		return false
+	}) != -1 {
+		return false
+	}
 	result := equation.numbers[0]
 	for _, stack := range stacks {
 		result = equation.numbers[0]
 		for i := 1; i < len(equation.numbers); i++ {
 			result = operate(result, equation.numbers[i], stack[i-1])
+			if result >= equation.answer && i != len(equation.numbers)-1 {
+				continue
+			}
 		}
 		if result == equation.answer {
 			return true
@@ -117,16 +133,59 @@ func P1() {
 	equations := get_equations(input)
 	result := 0
 	for _, eq := range equations {
-		if is_equation_valid(eq) {
+		stacks := generate_operations_permutaions(len(eq.numbers))
+		if is_equation_valid(eq, stacks) {
 			result += eq.answer
 		}
 	}
 	fmt.Println(result)
 }
 
+func can_numbers_equal_total(total int, numbers []int) bool {
+	if total < 0 {
+		return false
+	}
+
+	if len(numbers) == 0 {
+		return total == 0
+	}
+
+	current := numbers[0]
+	if next := total / current; total == next*current && can_numbers_equal_total(next, numbers[1:]) {
+		return true
+	}
+
+	if next, found := strings.CutSuffix(strconv.Itoa(total), strconv.Itoa(current)); found && len(next) != 0 {
+		n, err := strconv.Atoi(next)
+		if err != nil {
+			panic(err)
+		}
+
+		if can_numbers_equal_total(n, numbers[1:]) {
+			return true
+		}
+	}
+
+	return can_numbers_equal_total(total-current, numbers[1:])
+}
+
+func is_equation_valid2(equation Equation) bool {
+	slices.Reverse(equation.numbers)
+	if can_numbers_equal_total(equation.answer, equation.numbers) {
+		return true
+	}
+	return false
+}
+
 func P2() {
 	data, _ := os.ReadFile("test.txt")
 	input := strings.Split(string(data), "\n")
+	equations := get_equations(input)
 	result := 0
-	fmt.Println(input, result)
+	for _, eq := range equations {
+		if is_equation_valid2(eq) {
+			result += eq.answer
+		}
+	}
+	fmt.Println(result)
 }
