@@ -1,0 +1,16 @@
+a = 9,2
+b = 6,3
+c = 8,4
+b = 5,5
+
+lex_x = 12
+lex_y = 12
+
+fn(a,b) = {
+    x = a.x + (a.x - b.x)
+    y = a.y + (a.y - b.y)
+}
+
+fn(a,b) = {12,1} //actual {12,1}
+fn(b,a) = {6,4} //actual {12,1}
+fn(a,c) = {12,1} //actual {12,1}
